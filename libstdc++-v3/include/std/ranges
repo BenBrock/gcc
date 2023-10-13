@@ -4632,6 +4632,9 @@ namespace views::__adaptor
   class zip_view<_Vs...>::_Iterator
     : public __detail::__zip_view_iter_cat<_Const, _Vs...>
   {
+#ifdef __clang__ // LLVM-61763 workaround
+  public:
+#endif
     __detail::__tuple_or_pair_t<iterator_t<__detail::__maybe_const_t<_Const, _Vs>>...> _M_current;
 
     constexpr explicit
@@ -4652,11 +4655,13 @@ namespace views::__adaptor
 	return input_iterator_tag{};
     }
 
+#ifndef __clang__ // LLVM-61763 workaround
     template<move_constructible _Fp, input_range... _Ws>
       requires (view<_Ws> && ...) && (sizeof...(_Ws) > 0) && is_object_v<_Fp>
 	&& regular_invocable<_Fp&, range_reference_t<_Ws>...>
 	&& std::__detail::__can_reference<invoke_result_t<_Fp&, range_reference_t<_Ws>...>>
       friend class zip_transform_view;
+#endif
 
   public:
     // iterator_category defined in __zip_view_iter_cat
